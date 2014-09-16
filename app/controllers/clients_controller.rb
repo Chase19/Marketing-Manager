@@ -1,12 +1,17 @@
 class ClientsController < ApplicationController
   before_action :set_client, only: [:show, :edit, :update, :destroy]
+  before_action :authenticate_user!
 
   # GET /clients
   # GET /clients.json
   def index
     if params[:user_id]
-        @clients = Client.where(user_id: params[:user_id])
-        @user_name = User.find(params[:user_id]).full_name
+        if is_user_viewing_self?
+            @clients = Client.where(user_id: params[:user_id])
+            @user_name = User.find(params[:user_id]).full_name
+        else
+            redirect_to root_path
+        end
     else
         @clients = Client.all
     end
@@ -70,5 +75,9 @@ class ClientsController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def client_params
       params.require(:client).permit(:first_name, :last_name, :email_address, :mobile_phone_number, :user_id, :has_auto, :has_home, :has_life)
+    end
+    
+    def is_user_viewing_self?
+        params[:user_id].to_i == current_user.id
     end
 end
